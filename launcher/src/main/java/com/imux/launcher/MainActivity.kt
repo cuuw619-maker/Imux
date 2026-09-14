@@ -106,6 +106,22 @@ private fun SplashScreen(onFinished: () -> Unit) {
     }
 }
 
+private suspend fun loadVersions(): List<VersionInfo> {
+    val manager = VersionManager()
+    return try {
+        runCatching {
+            val latest = manager.fetchLatest()
+            listOf(latest) + manager.fetchArchives()
+        }.getOrDefault(
+            listOf(
+                VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true)
+            )
+        )
+    } finally {
+        manager.close()
+    }
+}
+
 @Composable
 private fun MainScreen() {
     var versions by remember {
@@ -117,15 +133,7 @@ private fun MainScreen() {
     }
 
     LaunchedEffect(Unit) {
-        val manager = VersionManager()
-        try {
-            runCatching {
-                val latest = manager.fetchLatest()
-                listOf(latest) + manager.fetchArchives()
-            }.onSuccess { versions = it }
-        } finally {
-            manager.close()
-        }
+        versions = loadVersions()
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
