@@ -1,8 +1,8 @@
 package com.imux.launcher
 
+import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import android.os.Bundle
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -31,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +64,8 @@ private fun ImuxApp() {
 private fun SplashScreen(onFinished: () -> Unit) {
     val transition = rememberInfiniteTransition(label = "splash")
     val rotation by transition.animateFloat(
-        0f, 360f,
+        0f,
+        360f,
         infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Restart),
         label = "rotation"
     )
@@ -108,19 +108,25 @@ private fun SplashScreen(onFinished: () -> Unit) {
 
 @Composable
 private fun MainScreen() {
-    val manager = remember { VersionManager() }
     var versions by remember {
-        mutableStateOf(listOf(VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true)))
+        mutableStateOf(
+            listOf(
+                VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true)
+            )
+        )
     }
 
     LaunchedEffect(Unit) {
-        runCatching {
-            val latest = manager.fetchLatest()
-            listOf(latest) + manager.fetchArchives()
-        }.onSuccess { versions = it }
+        val manager = VersionManager()
+        try {
+            runCatching {
+                val latest = manager.fetchLatest()
+                listOf(latest) + manager.fetchArchives()
+            }.onSuccess { versions = it }
+        } finally {
+            manager.close()
+        }
     }
-
-    DisposableEffect(Unit) { onDispose { manager.close() } }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         LazyColumn(
@@ -160,7 +166,11 @@ private fun VersionCard(version: VersionInfo) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(version.repository, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    version.repository,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             if (version.isCurrent) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
         }
