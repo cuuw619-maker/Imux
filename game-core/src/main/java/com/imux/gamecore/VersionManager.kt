@@ -30,9 +30,14 @@ private data class GitHubRelease(
 /** Repository-backed version catalog. Archive repositories can be added later. */
 class VersionManager(
     private val currentRepository: String = "cuuw619-maker/Imux",
-    private val archiveRepositories: List<String> = emptyList(),
-    private val client: HttpClient = defaultHttpClient()
+    private val archiveRepositories: List<String> = emptyList()
 ) {
+    private val client = HttpClient {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+    }
+
     suspend fun fetchLatest(): VersionInfo {
         val release = client.get("https://api.github.com/repos/$currentRepository/releases/latest") {
             header(HttpHeaders.Accept, "application/vnd.github+json")
@@ -65,12 +70,4 @@ class VersionManager(
     }
 
     fun close() = client.close()
-
-    companion object {
-        private fun defaultHttpClient() = HttpClient {
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
-    }
 }
