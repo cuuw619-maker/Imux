@@ -27,6 +27,7 @@ enum class LauncherTheme { MATERIAL_YOU, MINIMAL, COMPACT, GAMING, GLASS, AMOLED
 enum class LauncherOrientation { LANDSCAPE, SENSOR, PORTRAIT }
 enum class ExitBehavior { STAY_IN_LAUNCHER, CLOSE_LAUNCHER }
 
+@Serializable
 data class AnimationSettings(
     val profile: AnimationProfile = AnimationProfile.FULL,
     val animationEnabled: Boolean = true,
@@ -43,6 +44,7 @@ enum class LoadingAnimationStyle { CIRCULAR, LINEAR, PULSING, WAVE, DOTS, SHIMME
 enum class CardAnimationStyle { FADE, SLIDE, SCALE, NONE }
 enum class ButtonAnimationStyle { SCALE, FADE, NONE }
 
+@Serializable
 data class LoadingSettings(
     val minDurationMs: Long = 500,
     val maxDurationMs: Long = 3000,
@@ -51,6 +53,7 @@ data class LoadingSettings(
     val customText: String = ""
 )
 
+@Serializable
 data class PerformanceSettings(
     val memoryMb: Int = 1024,
     val fpsLimit: Int = 60,
