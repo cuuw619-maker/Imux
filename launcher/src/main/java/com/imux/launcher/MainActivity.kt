@@ -106,10 +106,9 @@ private fun SplashScreen(onFinished: () -> Unit) {
 }
 
 private suspend fun loadVersions(): List<VersionInfo> {
-    val manager = VersionManager()
     return try {
-        val latest = runCatching { manager.fetchLatest() }.getOrNull()
-        val archives = manager.fetchArchives()
+        val latest = runCatching { VersionManager.fetchLatest() }.getOrNull()
+        val archives = VersionManager.fetchArchives()
         buildList {
             if (latest != null) add(latest)
             addAll(archives)
@@ -117,8 +116,8 @@ private suspend fun loadVersions(): List<VersionInfo> {
                 add(VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true))
             }
         }
-    } finally {
-        manager.close()
+    } catch (_: Exception) {
+        listOf(VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true))
     }
 }
 
