@@ -22,14 +22,16 @@ enum class LauncherOrientation { LANDSCAPE, SENSOR, PORTRAIT }
 enum class ExitBehavior { STAY_IN_LAUNCHER, CLOSE_LAUNCHER }
 
 data class AnimationSettings(
+    val profile: AnimationProfile = AnimationProfile.FULL,
     val animationEnabled: Boolean = true,
     val animationSpeed: Float = 1f,
     val transitionStyle: TransitionStyle = TransitionStyle.FADE_SCALE,
-    val loadingAnimationStyle: LoadingAnimationStyle = LoadingAnimationStyle.CIRCULAR,
+    val loadingAnimationStyle: LoadingAnimationStyle = LoadingAnimationStyle.LINEAR,
     val cardAnimationStyle: CardAnimationStyle = CardAnimationStyle.FADE,
     val buttonAnimationStyle: ButtonAnimationStyle = ButtonAnimationStyle.SCALE
 )
 
+enum class AnimationProfile { FULL, REDUCED, OFF }
 enum class TransitionStyle { FADE, SLIDE, SCALE, FADE_SCALE, NONE }
 enum class LoadingAnimationStyle { CIRCULAR, LINEAR, PULSING, WAVE, DOTS, SHIMMER }
 enum class CardAnimationStyle { FADE, SLIDE, SCALE, NONE }
