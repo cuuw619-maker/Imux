@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -37,15 +37,12 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
         NavigationRail { SettingsCategory.entries.forEach { item -> NavigationRailItem(selected = category == item, onClick = { category = item }, icon = { Icon(item.icon, null) }, label = { Text(item.label, maxLines = 1) }) } }
         VerticalDivider()
         Column(Modifier.fillMaxSize().padding(20.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, "Back") }
-                Text(category.label, style = MaterialTheme.typography.headlineSmall)
-            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, "Back") }; Text(category.label, style = MaterialTheme.typography.headlineSmall) }
             Spacer(Modifier.height(12.dp))
             when (category) {
                 SettingsCategory.LAUNCHER -> LauncherSettingsPage(settings, vm)
                 SettingsCategory.GAME -> GameSettingsPage(settings, vm)
-                SettingsCategory.CONTROLS -> ControlsSettingsPage(settings, vm, onControls)
+                SettingsCategory.CONTROLS -> ControlsSettingsPage(settings, onControls)
                 SettingsCategory.GRAPHICS -> GraphicsSettingsPage(settings, vm)
                 SettingsCategory.RUNTIME -> RuntimeSettingsPage(settings, vm)
                 SettingsCategory.DOWNLOADS -> DownloadsSettingsPage()
@@ -68,7 +65,6 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
     SettingSwitch("Automatic update checks", true) { }
     SettingSwitch("Load resources on startup", true) { }
     SettingSwitch("Notifications", true) { }
-    SettingSwitch("Automatic maintenance checks", true) { }
     OutlinedButton(onClick = { LogStore.repository.log(LogLevel.INFO, "Launcher", "Launcher cache cleanup requested") }) { Text("Clear launcher cache") }
 }
 
@@ -96,7 +92,7 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
 
 @Composable private fun GraphicsSettingsPage(s: LauncherSettings, vm: LauncherSettingsViewModel) = SettingsList {
     val g = s.graphics
-    SettingEnum("Renderer", g.renderer.name, listOf("AUTO", "OPENGL_ES", "VULKAN")) { v -> vm.update { it.copy(graphics = it.graphics.copy(renderer = com.imux.gamecore.renderer.GraphicsBackendType.valueOf(v))) } }
+    SettingEnum("Renderer", g.renderer.name, listOf("AUTO", "OPENGL_ES", "VULKAN")) { v -> vm.update { it.copy(graphics = it.graphics.copy(renderer = com.imux.gamecore.runtime.GraphicsBackendType.valueOf(v))) } }
     SettingEnum("Quality", g.quality.name, GraphicsQuality.entries.map { it.name }) { v -> vm.update { it.copy(graphics = it.graphics.copy(quality = GraphicsQuality.valueOf(v))) } }
     SettingSlider("Resolution scale", g.resolutionScale, .5f..1f, .05f) { v -> vm.update { it.copy(graphics = it.graphics.copy(resolutionScale = v)) } }
     SettingSlider("Texture memory", g.maxTextureMemoryMb.toFloat(), 128f..768f, 64f) { v -> vm.update { it.copy(graphics = it.graphics.copy(maxTextureMemoryMb = v.roundToInt())) } }
@@ -113,7 +109,7 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
     SettingsList {
         Text("Runtime budget", style = MaterialTheme.typography.titleMedium)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Memory"); Text(manager.formatMb(memory.toInt())) }
-        Slider(value = memory, onValueChange = { memory = manager.sanitize(it.toInt()).toFloat() }, valueRange = range.first.toFloat()..range.last.toFloat(), steps = (range.last - range.first) / 64)
+        Slider(value = memory, onValueChange = { memory = manager.sanitize(it.toInt()).toFloat() }, valueRange = range.first.toFloat()..range.last.toFloat())
         Text("Safe range: ${manager.formatMb(range.first)} – ${manager.formatMb(range.last)}", style = MaterialTheme.typography.labelSmall)
         if (memory.toInt() > manager.recommendedMemoryMb()) Text("Above recommended budget: memory pressure may increase under load.", color = MaterialTheme.colorScheme.error)
         Button(onClick = { vm.update { it.copy(performance = it.performance.copy(memoryMb = manager.sanitize(memory.toInt()))) } }) { Text("Apply memory budget") }
@@ -121,15 +117,15 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
     }
 }
 
-@Composable private fun ControlsSettingsPage(s: LauncherSettings, vm: LauncherSettingsViewModel, onControls: () -> Unit) = SettingsList {
+@Composable private fun ControlsSettingsPage(s: LauncherSettings, onControls: () -> Unit) = SettingsList {
     Text("The editor is a full-screen game viewport preview. Changes are serialized into the launcher settings repository.")
     Button(onClick = onControls, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Edit, null); Spacer(Modifier.width(8.dp)); Text("Open full-screen editor") }
-    SettingEnum("Preset", s.controlLayout.name.uppercase(), listOf("DEFAULT", "COMPACT", "GAMING")) { v -> vm.update { it.copy(controlLayout = it.controlLayout.copy(name = v.lowercase().replaceFirstChar(Char::uppercase))) } }
+    Text("Preset: ${s.controlLayout.name}", color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable private fun DownloadsSettingsPage() = SettingsList {
     Text("Game resource management")
-    Text("The download service boundary is prepared for version manifests, resource packs and integrity checks.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text("Download service boundary is prepared for version manifests, resource packs and integrity checks.", color = MaterialTheme.colorScheme.onSurfaceVariant)
     SettingSwitch("Wi-Fi only", true) { }
     SettingSwitch("Verify downloaded resources", true) { }
 }
@@ -140,21 +136,17 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
     SettingsList {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("ALL", "INFO", "WARNING", "ERROR").forEach { value -> FilterChip(selected = filter == value, onClick = { filter = value }, label = { Text(value) }) }
-            Spacer(Modifier.weight(1f))
-            OutlinedButton(onClick = { LogStore.repository.clear() }) { Text("Clear") }
+            Spacer(Modifier.weight(1f)); OutlinedButton(onClick = { LogStore.repository.clear() }) { Text("Clear") }
         }
-        val visible = entries.filter { filter == "ALL" || it.level.name == filter }
-        visible.asReversed().forEach { entry ->
-            ListItem(headlineContent = { Text("${entry.level.name} · ${entry.tag}") }, supportingContent = { Text(entry.message) })
-        }
-        if (visible.isEmpty()) Text("No buffered entries. Capacity is limited to 500 entries.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        entries.asReversed().filter { filter == "ALL" || it.level.name == filter }.forEach { entry -> ListItem(headlineContent = { Text("${entry.level.name} · ${entry.tag}") }, supportingContent = { Text(entry.message) }) }
+        if (entries.isEmpty()) Text("No buffered entries. Capacity is limited to 500 entries.", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable private fun AboutSettingsPage() = SettingsList {
     Text("Imux", style = MaterialTheme.typography.headlineMedium)
     Text("Launcher and runtime foundation for the future Imux game. No Minecraft API or runtime dependency is used.")
-    Text("Renderer: OpenGL ES foundation with Vulkan backend reserved for a later implementation.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text("Renderer: OpenGL ES foundation. Vulkan remains an explicit extension point.", color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable private fun SettingsList(content: @Composable ColumnScope.() -> Unit) {
@@ -166,10 +158,7 @@ fun SettingsHubScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel,
 }
 
 @Composable private fun SettingSlider(label: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float = 1f, onChange: (Float) -> Unit) = Card {
-    Column(Modifier.padding(16.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(label); Text("%.2f".format(value)) }
-        Slider(value = value, onValueChange = onChange, valueRange = range, steps = (((range.endInclusive - range.start) / step).roundToInt() - 1).coerceAtLeast(0))
-    }
+    Column(Modifier.padding(16.dp)) { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(label); Text("%.2f".format(value)) }; Slider(value = value, onValueChange = onChange, valueRange = range, steps = (((range.endInclusive - range.start) / step).roundToInt() - 1).coerceAtLeast(0)) }
 }
 
 @Composable private fun SettingEnum(label: String, value: String, options: List<String>, onChange: (String) -> Unit) {
@@ -185,24 +174,24 @@ fun FullscreenControlEditor(settings: LauncherSettings, vm: LauncherSettingsView
     var layout by remember { mutableStateOf(settings.controlLayout) }
     var selectedId by remember { mutableStateOf<String?>(layout.elements.firstOrNull()?.id) }
     val selected = layout.elements.firstOrNull { it.id == selectedId }
-
+    val density = LocalDensity.current
     Column(Modifier.fillMaxSize().background(Color.Black)) {
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(12.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(24.dp))) {
-            val previewWidth = maxWidth
-            val previewHeight = maxHeight
+            val previewWidthPx = with(density) { maxWidth.toPx() }
+            val previewHeightPx = with(density) { maxHeight.toPx() }
             layout.elements.filter { it.visible }.forEach { element ->
                 val selectedElement = element.id == selectedId
                 Box(
-                    Modifier.offset { IntOffset((previewWidth.toPx() * element.x).roundToInt(), (previewHeight.toPx() * element.y).roundToInt()) }
-                        .size(previewWidth * element.width, previewHeight * element.height)
+                    Modifier.offset { IntOffset((previewWidthPx * element.x).roundToInt(), (previewHeightPx * element.y).roundToInt()) }
+                        .size(maxWidth * element.width, maxHeight * element.height)
                         .background(if (selectedElement) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(18.dp))
                         .pointerInput(element.id) {
                             detectDragGestures(onDragStart = { selectedId = element.id }) { change, drag ->
                                 change.consume()
                                 layout = layout.copy(elements = layout.elements.map { current ->
                                     if (current.id == element.id) current.copy(
-                                        x = (current.x + drag.x / previewWidth.toPx()).coerceIn(0f, (1f - current.width).coerceAtLeast(0f)),
-                                        y = (current.y + drag.y / previewHeight.toPx()).coerceIn(0f, (1f - current.height).coerceAtLeast(0f))
+                                        x = (current.x + drag.x / previewWidthPx).coerceIn(0f, (1f - current.width).coerceAtLeast(0f)),
+                                        y = (current.y + drag.y / previewHeightPx).coerceIn(0f, (1f - current.height).coerceAtLeast(0f))
                                     ) else current
                                 })
                             }
@@ -216,25 +205,21 @@ fun FullscreenControlEditor(settings: LauncherSettings, vm: LauncherSettingsView
                 if (selected != null) {
                     Text("${selected.type.name} · ${selected.action ?: "default action"}", style = MaterialTheme.typography.titleSmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Slider(value = selected.x, onValueChange = { updateSelected(layout, selectedId) { it.copy(x = it.coerceIn(0f, 1f - selected.width)) }.also { layout = it } }, modifier = Modifier.weight(1f)); Text("X")
-                        Slider(value = selected.y, onValueChange = { updateSelected(layout, selectedId) { it.copy(y = it.coerceIn(0f, 1f - selected.height)) }.also { layout = it } }, modifier = Modifier.weight(1f)); Text("Y")
+                        SettingSlider("X", selected.x, 0f..(1f - selected.width).coerceAtLeast(0f), .01f) { v -> layout = changeElement(layout, selected.id) { it.copy(x = v) } }
+                        SettingSlider("Y", selected.y, 0f..(1f - selected.height).coerceAtLeast(0f), .01f) { v -> layout = changeElement(layout, selected.id) { it.copy(y = v) } }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Slider(value = selected.width, onValueChange = { updateSelected(layout, selectedId) { it.copy(width = it.coerceIn(.04f, 1f - it.x)) }.also { layout = it } }, modifier = Modifier.weight(1f)); Text("W")
-                        Slider(value = selected.height, onValueChange = { updateSelected(layout, selectedId) { it.copy(height = it.coerceIn(.04f, 1f - it.y)) }.also { layout = it } }, modifier = Modifier.weight(1f)); Text("H")
+                        SettingSlider("Width", selected.width, .04f..(1f - selected.x).coerceAtLeast(.04f), .01f) { v -> layout = changeElement(layout, selected.id) { it.copy(width = v) } }
+                        SettingSlider("Height", selected.height, .04f..(1f - selected.y).coerceAtLeast(.04f), .01f) { v -> layout = changeElement(layout, selected.id) { it.copy(height = v) } }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Opacity", Modifier.weight(1f)); Slider(value = selected.alpha, onValueChange = { a -> layout = layout.copy(elements = layout.elements.map { if (it.id == selected.id) it.copy(alpha = a) else it }) }, valueRange = .2f..1f, modifier = Modifier.width(180.dp))
+                        Text("Opacity", Modifier.weight(1f)); Slider(value = selected.alpha, onValueChange = { a -> layout = changeElement(layout, selected.id) { it.copy(alpha = a) } }, valueRange = .2f..1f, modifier = Modifier.width(180.dp))
                         OutlinedButton(onClick = { layout = layout.copy(elements = layout.elements.filterNot { it.id == selected.id }); selectedId = layout.elements.firstOrNull()?.id }) { Text("Delete") }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = { layout = ControlLayout() }) { Text("Reset") }
-                    FilledTonalButton(onClick = {
-                        val id = "custom-${layout.elements.size}"
-                        layout = layout.copy(elements = layout.elements + ControlElement(id, ControlElementType.CUSTOM, .45f, .42f))
-                        selectedId = id
-                    }) { Text("Add element") }
+                    Button(onClick = { layout = ControlLayout(); selectedId = layout.elements.firstOrNull()?.id }) { Text("Reset") }
+                    FilledTonalButton(onClick = { val id = "custom-${layout.elements.size}"; layout = layout.copy(elements = layout.elements + ControlElement(id, ControlElementType.CUSTOM, .45f, .42f)); selectedId = id }) { Text("Add element") }
                     Spacer(Modifier.weight(1f))
                     OutlinedButton(onClick = { vm.update { it.copy(controlLayout = layout, controlLayoutId = layout.id) }; navController.popBackStack() }) { Text("Save & Done") }
                 }
@@ -243,5 +228,5 @@ fun FullscreenControlEditor(settings: LauncherSettings, vm: LauncherSettingsView
     }
 }
 
-private fun updateSelected(layout: ControlLayout, selectedId: String?, transform: (Float) -> Float): ControlLayout =
-    layout.copy(elements = layout.elements.map { if (it.id == selectedId) it.copy(x = transform(it.x)) else it })
+private fun changeElement(layout: ControlLayout, id: String, transform: (ControlElement) -> ControlElement): ControlLayout =
+    layout.copy(elements = layout.elements.map { if (it.id == id) transform(it) else it })
