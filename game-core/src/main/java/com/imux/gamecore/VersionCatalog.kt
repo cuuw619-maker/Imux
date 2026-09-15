@@ -5,17 +5,22 @@ package com.imux.gamecore
  * All network and resource-lifecycle concerns stay inside game-core.
  */
 suspend fun loadVersionCatalog(): List<VersionInfo> {
-    return try {
-        val latest = runCatching { VersionManager.fetchLatest() }.getOrNull()
-        val archives = VersionManager.fetchArchives()
-
-        buildList {
-            if (latest != null) add(latest)
-            addAll(archives)
-            if (isEmpty()) add(fallbackVersion())
-        }
+    val latest = try {
+        VersionManager.fetchLatest()
     } catch (_: Exception) {
-        listOf(fallbackVersion())
+        null
+    }
+
+    val archives = try {
+        VersionManager.fetchArchives()
+    } catch (_: Exception) {
+        emptyList()
+    }
+
+    return buildList {
+        if (latest != null) add(latest)
+        addAll(archives)
+        if (isEmpty()) add(fallbackVersion())
     }
 }
 
