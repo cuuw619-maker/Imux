@@ -1,5 +1,8 @@
 package com.imux.launcher.settings
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class LauncherSettings(
     val language: String = "system",
     val theme: LauncherTheme = LauncherTheme.MATERIAL_YOU,
@@ -14,7 +17,10 @@ data class LauncherSettings(
     val animations: AnimationSettings = AnimationSettings(),
     val loading: LoadingSettings = LoadingSettings(),
     val performance: PerformanceSettings = PerformanceSettings(),
-    val controlLayoutId: String = "default"
+    val controlLayoutId: String = "default",
+    val game: GameSettings = GameSettings(),
+    val graphics: GraphicsSettings = GraphicsSettings(),
+    val controlLayout: ControlLayout = ControlLayout()
 )
 
 enum class LauncherTheme { MATERIAL_YOU, MINIMAL, COMPACT, GAMING, GLASS, AMOLED }
