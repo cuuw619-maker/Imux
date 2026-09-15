@@ -1,12 +1,7 @@
 package com.imux.launcher.settings
 
 import android.content.Context
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,6 +20,7 @@ class LauncherSettingsRepository(private val context: Context) {
         val compact = booleanPreferencesKey("compact")
         val transparency = floatPreferencesKey("transparency")
         val effects = booleanPreferencesKey("effects")
+        val animationProfile = stringPreferencesKey("animation_profile")
         val animationEnabled = booleanPreferencesKey("animation_enabled")
         val animationSpeed = floatPreferencesKey("animation_speed")
         val transition = stringPreferencesKey("transition")
@@ -43,84 +39,49 @@ class LauncherSettingsRepository(private val context: Context) {
         val controlLayout = stringPreferencesKey("control_layout")
     }
 
-    val settings: Flow<LauncherSettings> = context.launcherDataStore.data.map { p ->
-        LauncherSettings(
-            language = p[Keys.language] ?: "system",
-            theme = enumValue(p[Keys.theme], LauncherTheme.MATERIAL_YOU),
-            dynamicColors = p[Keys.dynamicColors] ?: true,
-            orientation = enumValue(p[Keys.orientation], LauncherOrientation.LANDSCAPE),
-            confirmLaunch = p[Keys.confirmLaunch] ?: false,
-            exitBehavior = enumValue(p[Keys.exitBehavior], ExitBehavior.STAY_IN_LAUNCHER),
-            cardCornerRadius = p[Keys.cardRadius] ?: 24,
-            compactDensity = p[Keys.compact] ?: false,
-            interfaceTransparency = p[Keys.transparency] ?: 0f,
-            visualEffects = p[Keys.effects] ?: true,
-            animations = AnimationSettings(
-                animationEnabled = p[Keys.animationEnabled] ?: true,
-                animationSpeed = p[Keys.animationSpeed] ?: 1f,
-                transitionStyle = enumValue(p[Keys.transition], TransitionStyle.FADE_SCALE),
-                loadingAnimationStyle = enumValue(p[Keys.loadingAnimation], LoadingAnimationStyle.CIRCULAR),
-                cardAnimationStyle = enumValue(p[Keys.cardAnimation], CardAnimationStyle.FADE),
-                buttonAnimationStyle = enumValue(p[Keys.buttonAnimation], ButtonAnimationStyle.SCALE)
-            ),
-            loading = LoadingSettings(
-                minDurationMs = p[Keys.minLoading] ?: 500,
-                maxDurationMs = p[Keys.maxLoading] ?: 3000,
-                showProgress = p[Keys.showProgress] ?: true,
-                showStatus = p[Keys.showStatus] ?: true,
-                customText = p[Keys.loadingText] ?: ""
-            ),
-            performance = PerformanceSettings(
-                memoryMb = p[Keys.memoryMb] ?: 1024,
-                fpsLimit = p[Keys.fps] ?: 60,
-                powerSaving = p[Keys.powerSaving] ?: false,
-                interfaceEffectsLevel = p[Keys.effectsLevel] ?: 1
-            ),
-            controlLayoutId = p[Keys.controlLayout] ?: "default"
-        )
-    }
+    val settings: Flow<LauncherSettings> = context.launcherDataStore.data.map(::decode)
 
     suspend fun update(transform: (LauncherSettings) -> LauncherSettings) {
-        context.launcherDataStore.edit { p ->
-            val current = LauncherSettings(
-                language = p[Keys.language] ?: "system",
-                theme = enumValue(p[Keys.theme], LauncherTheme.MATERIAL_YOU),
-                dynamicColors = p[Keys.dynamicColors] ?: true,
-                orientation = enumValue(p[Keys.orientation], LauncherOrientation.LANDSCAPE),
-                confirmLaunch = p[Keys.confirmLaunch] ?: false,
-                exitBehavior = enumValue(p[Keys.exitBehavior], ExitBehavior.STAY_IN_LAUNCHER),
-                cardCornerRadius = p[Keys.cardRadius] ?: 24,
-                compactDensity = p[Keys.compact] ?: false,
-                interfaceTransparency = p[Keys.transparency] ?: 0f,
-                visualEffects = p[Keys.effects] ?: true,
-                animations = AnimationSettings(
-                    animationEnabled = p[Keys.animationEnabled] ?: true,
-                    animationSpeed = p[Keys.animationSpeed] ?: 1f,
-                    transitionStyle = enumValue(p[Keys.transition], TransitionStyle.FADE_SCALE),
-                    loadingAnimationStyle = enumValue(p[Keys.loadingAnimation], LoadingAnimationStyle.CIRCULAR),
-                    cardAnimationStyle = enumValue(p[Keys.cardAnimation], CardAnimationStyle.FADE),
-                    buttonAnimationStyle = enumValue(p[Keys.buttonAnimation], ButtonAnimationStyle.SCALE)
-                ),
-                loading = LoadingSettings(
-                    minDurationMs = p[Keys.minLoading] ?: 500,
-                    maxDurationMs = p[Keys.maxLoading] ?: 3000,
-                    showProgress = p[Keys.showProgress] ?: true,
-                    showStatus = p[Keys.showStatus] ?: true,
-                    customText = p[Keys.loadingText] ?: ""
-                ),
-                performance = PerformanceSettings(
-                    memoryMb = p[Keys.memoryMb] ?: 1024,
-                    fpsLimit = p[Keys.fps] ?: 60,
-                    powerSaving = p[Keys.powerSaving] ?: false,
-                    interfaceEffectsLevel = p[Keys.effectsLevel] ?: 1
-                ),
-                controlLayoutId = p[Keys.controlLayout] ?: "default"
-            )
-            write(p, transform(current))
-        }
+        context.launcherDataStore.edit { preferences -> write(preferences, transform(decode(preferences))) }
     }
 
-    private fun write(p: androidx.datastore.preferences.core.MutablePreferences, s: LauncherSettings) {
+    private fun decode(p: Preferences): LauncherSettings = LauncherSettings(
+        language = p[Keys.language] ?: "system",
+        theme = enumValue(p[Keys.theme], LauncherTheme.MATERIAL_YOU),
+        dynamicColors = p[Keys.dynamicColors] ?: true,
+        orientation = enumValue(p[Keys.orientation], LauncherOrientation.LANDSCAPE),
+        confirmLaunch = p[Keys.confirmLaunch] ?: false,
+        exitBehavior = enumValue(p[Keys.exitBehavior], ExitBehavior.STAY_IN_LAUNCHER),
+        cardCornerRadius = p[Keys.cardRadius] ?: 24,
+        compactDensity = p[Keys.compact] ?: false,
+        interfaceTransparency = p[Keys.transparency] ?: 0f,
+        visualEffects = p[Keys.effects] ?: true,
+        animations = AnimationSettings(
+            profile = enumValue(p[Keys.animationProfile], AnimationProfile.FULL),
+            animationEnabled = p[Keys.animationEnabled] ?: true,
+            animationSpeed = p[Keys.animationSpeed] ?: 1f,
+            transitionStyle = enumValue(p[Keys.transition], TransitionStyle.FADE_SCALE),
+            loadingAnimationStyle = enumValue(p[Keys.loadingAnimation], LoadingAnimationStyle.LINEAR),
+            cardAnimationStyle = enumValue(p[Keys.cardAnimation], CardAnimationStyle.FADE),
+            buttonAnimationStyle = enumValue(p[Keys.buttonAnimation], ButtonAnimationStyle.SCALE)
+        ),
+        loading = LoadingSettings(
+            minDurationMs = p[Keys.minLoading] ?: 500,
+            maxDurationMs = p[Keys.maxLoading] ?: 3000,
+            showProgress = p[Keys.showProgress] ?: true,
+            showStatus = p[Keys.showStatus] ?: true,
+            customText = p[Keys.loadingText] ?: ""
+        ),
+        performance = PerformanceSettings(
+            memoryMb = p[Keys.memoryMb] ?: 1024,
+            fpsLimit = p[Keys.fps] ?: 60,
+            powerSaving = p[Keys.powerSaving] ?: false,
+            interfaceEffectsLevel = p[Keys.effectsLevel] ?: 1
+        ),
+        controlLayoutId = p[Keys.controlLayout] ?: "default"
+    )
+
+    private fun write(p: MutablePreferences, s: LauncherSettings) {
         p[Keys.language] = s.language
         p[Keys.theme] = s.theme.name
         p[Keys.dynamicColors] = s.dynamicColors
@@ -131,6 +92,7 @@ class LauncherSettingsRepository(private val context: Context) {
         p[Keys.compact] = s.compactDensity
         p[Keys.transparency] = s.interfaceTransparency
         p[Keys.effects] = s.visualEffects
+        p[Keys.animationProfile] = s.animations.profile.name
         p[Keys.animationEnabled] = s.animations.animationEnabled
         p[Keys.animationSpeed] = s.animations.animationSpeed
         p[Keys.transition] = s.animations.transitionStyle.name
