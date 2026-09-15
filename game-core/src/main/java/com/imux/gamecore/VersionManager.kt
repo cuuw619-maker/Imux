@@ -27,11 +27,11 @@ private data class GitHubRelease(
     val draft: Boolean = false
 )
 
-/** Repository-backed version catalog. Archive repositories can be added later. */
-class VersionManager(
-    private val currentRepository: String = "cuuw619-maker/Imux",
-    private val archiveRepositories: List<String> = emptyList()
-) {
+/** Repository-backed version catalog owned entirely by game-core. */
+object VersionManager {
+    private const val CURRENT_REPOSITORY = "cuuw619-maker/Imux"
+    private val archiveRepositories = emptyList<String>()
+
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
@@ -39,7 +39,7 @@ class VersionManager(
     }
 
     suspend fun fetchLatest(): VersionInfo {
-        val release = client.get("https://api.github.com/repos/$currentRepository/releases/latest") {
+        val release = client.get("https://api.github.com/repos/$CURRENT_REPOSITORY/releases/latest") {
             header(HttpHeaders.Accept, "application/vnd.github+json")
         }.body<GitHubRelease>()
 
@@ -47,7 +47,7 @@ class VersionManager(
             id = release.tag_name,
             name = release.name?.takeIf { it.isNotBlank() } ?: release.tag_name,
             tagName = release.tag_name,
-            repository = currentRepository,
+            repository = CURRENT_REPOSITORY,
             isCurrent = true
         )
     }
