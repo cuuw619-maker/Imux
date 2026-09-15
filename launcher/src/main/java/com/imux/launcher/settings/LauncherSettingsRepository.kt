@@ -5,8 +5,11 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 
 private val Context.launcherDataStore by preferencesDataStore(name = "launcher_settings")
+
+private val settingsJson = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
 class LauncherSettingsRepository(private val context: Context) {
     private object Keys {
@@ -37,6 +40,9 @@ class LauncherSettingsRepository(private val context: Context) {
         val powerSaving = booleanPreferencesKey("power_saving")
         val effectsLevel = intPreferencesKey("effects_level")
         val controlLayout = stringPreferencesKey("control_layout")
+        val gameSettings = stringPreferencesKey("game_settings")
+        val graphicsSettings = stringPreferencesKey("graphics_settings")
+        val controlLayoutData = stringPreferencesKey("control_layout_data")
     }
 
     val settings: Flow<LauncherSettings> = context.launcherDataStore.data.map(::decode)
@@ -78,7 +84,10 @@ class LauncherSettingsRepository(private val context: Context) {
             powerSaving = p[Keys.powerSaving] ?: false,
             interfaceEffectsLevel = p[Keys.effectsLevel] ?: 1
         ),
-        controlLayoutId = p[Keys.controlLayout] ?: "default"
+        controlLayoutId = p[Keys.controlLayout] ?: "default",
+        game = decodeJson(p[Keys.gameSettings], GameSettings()),
+        graphics = decodeJson(p[Keys.graphicsSettings], GraphicsSettings()),
+        controlLayout = decodeJson(p[Keys.controlLayoutData], ControlLayout())
     )
 
     private fun write(p: MutablePreferences, s: LauncherSettings) {
@@ -109,7 +118,13 @@ class LauncherSettingsRepository(private val context: Context) {
         p[Keys.powerSaving] = s.performance.powerSaving
         p[Keys.effectsLevel] = s.performance.interfaceEffectsLevel
         p[Keys.controlLayout] = s.controlLayoutId
+        p[Keys.gameSettings] = settingsJson.encodeToString(GameSettings.serializer(), s.game)
+        p[Keys.graphicsSettings] = settingsJson.encodeToString(GraphicsSettings.serializer(), s.graphics)
+        p[Keys.controlLayoutData] = settingsJson.encodeToString(ControlLayout.serializer(), s.controlLayout)
     }
+
+    private inline fun <reified T> decodeJson(value: String?, fallback: T): T =
+        value?.let { runCatching { settingsJson.decodeFromString<T>(it) }.getOrNull() } ?: fallback
 
     private inline fun <reified T : Enum<T>> enumValue(value: String?, default: T): T =
         value?.let { runCatching { enumValueOf<T>(it) }.getOrNull() } ?: default
