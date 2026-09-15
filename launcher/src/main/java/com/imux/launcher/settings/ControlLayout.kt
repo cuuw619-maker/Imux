@@ -1,15 +1,11 @@
 package com.imux.launcher.settings
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class ControlLayout(
     val id: String = "default",
     val name: String = "Default",
     val elements: List<ControlElement> = defaultControlElements()
 )
 
-@Serializable
 data class ControlElement(
     val id: String,
     val type: ControlElementType,
@@ -22,7 +18,6 @@ data class ControlElement(
     val visible: Boolean = true
 )
 
-@Serializable
 enum class ControlElementType { BUTTON, JOYSTICK, DPAD, ACTION, TEXT }
 
 private fun defaultControlElements() = listOf(
