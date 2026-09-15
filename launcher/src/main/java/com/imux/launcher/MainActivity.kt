@@ -31,10 +31,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,21 +41,38 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import com.imux.gamecore.VersionInfo
 import com.imux.gamecore.loadVersionCatalog
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private var versions by mutableStateOf<List<VersionInfo>?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { ImuxTheme { ImuxApp() } }
+
+        lifecycleScope.launch {
+            versions = loadVersionCatalog()
+        }
+
+        setContent {
+            ImuxTheme {
+                ImuxApp(versions)
+            }
+        }
     }
 }
 
 @Composable
-private fun ImuxApp() {
-    var showSplash by remember { mutableStateOf(true) }
-    if (showSplash) SplashScreen { showSplash = false } else MainScreen()
+private fun ImuxApp(versions: List<VersionInfo>?) {
+    var showSplash by androidx.compose.runtime.remember { mutableStateOf(true) }
+    if (showSplash) {
+        SplashScreen { showSplash = false }
+    } else {
+        MainScreen(versions)
+    }
 }
 
 @Composable
@@ -69,7 +84,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
         label = "rotation"
     )
 
-    LaunchedEffect(Unit) {
+    androidx.compose.runtime.LaunchedEffect(Unit) {
         delay(1800)
         onFinished()
     }
@@ -106,16 +121,9 @@ private fun SplashScreen(onFinished: () -> Unit) {
 }
 
 @Composable
-private fun MainScreen() {
-    var versions by remember { mutableStateOf<List<VersionInfo>?>(null) }
-
-    LaunchedEffect(Unit) {
-        versions = loadVersionCatalog()
-    }
-
+private fun MainScreen(versions: List<VersionInfo>?) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        val loadedVersions = versions
-        if (loadedVersions == null) {
+        if (versions == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -133,7 +141,7 @@ private fun MainScreen() {
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
                     )
                 }
-                items(loadedVersions, key = { it.id }) { VersionCard(it) }
+                items(versions, key = { it.id }) { VersionCard(it) }
             }
         }
     }
