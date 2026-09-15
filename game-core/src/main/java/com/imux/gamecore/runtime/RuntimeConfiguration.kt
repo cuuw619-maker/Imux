@@ -12,6 +12,11 @@ data class RuntimeConfiguration(
     val graphicsQuality: GraphicsQuality = GraphicsQuality.LOW,
     val fpsLimit: Int = 60,
     val renderDistance: Int = 8,
+    val simulationDistance: Int = 6,
+    val textureQuality: String = "MEDIUM",
+    val shadows: Boolean = false,
+    val vsync: Boolean = true,
+    val antiAliasing: String = "NONE",
     val controlLayoutId: String = "default",
     val extraArguments: Map<String, String> = emptyMap()
 )
