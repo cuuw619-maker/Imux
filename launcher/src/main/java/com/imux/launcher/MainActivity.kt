@@ -9,6 +9,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
@@ -70,7 +74,15 @@ class MainActivity : ComponentActivity() {
         progress = 1f
         ready = true
     }
-    if (ready && settings.animations.profile == AnimationProfile.OFF) content() else AnimatedContent(targetState = ready, transitionSpec = { if (settings.animations.profile == AnimationProfile.REDUCED) tween(90) else tween(180) }, label = "startup") { isReady -> if (isReady) content() else LoadingScreen(settings, status, progress) }
+    if (ready && settings.animations.profile == AnimationProfile.OFF) {
+        content()
+    } else {
+        AnimatedContent(
+            targetState = ready,
+            transitionSpec = { val duration = if (settings.animations.profile == AnimationProfile.REDUCED) 90 else 180; fadeIn(tween(duration)) togetherWith fadeOut(tween(duration)) },
+            label = "startup"
+        ) { isReady -> if (isReady) content() else LoadingScreen(settings, status, progress) }
+    }
 }
 
 @Composable private fun LoadingScreen(settings: LauncherSettings, status: String, progress: Float) {
@@ -81,6 +93,7 @@ class MainActivity : ComponentActivity() {
     } }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable private fun LauncherShell(versions: List<VersionInfo>?, settings: LauncherSettings, vm: LauncherSettingsViewModel) {
     val nav = rememberNavController()
     val widthClass = calculateWindowSizeClass(LocalContext.current as Activity).widthSizeClass
