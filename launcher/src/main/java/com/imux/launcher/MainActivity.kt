@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -53,9 +54,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun ImuxRoot(versions: List<VersionInfo>?, vm: LauncherSettingsViewModel) {
     val settings by vm.settings.collectAsStateWithLifecycle()
-    ImuxTheme(settings.theme, settings.dynamicColors) {
-        StartupGate(settings) { LauncherShell(versions, settings, vm) }
-    }
+    ImuxTheme(settings.theme, settings.dynamicColors) { StartupGate(settings) { LauncherShell(versions, settings, vm) } }
 }
 
 @Composable
@@ -73,26 +72,19 @@ private fun StartupGate(settings: LauncherSettings, content: @Composable () -> U
         )
     }
     LaunchedEffect(Unit) {
-        StartupCoordinator(tasks).run { index, total, task ->
-            status = task.label
-            progress = index.toFloat() / total
-        }
+        StartupCoordinator(tasks).run { index, total, task -> status = task.label; progress = index.toFloat() / total }
         progress = 1f
         ready = true
     }
     if (ready) {
         if (settings.animations.profile == AnimationProfile.OFF) content()
-        else Crossfade(true, animationSpec = tween((180 / settings.animations.animationSpeed).toInt().coerceAtLeast(1)), label = "startup") { content() }
+        else Crossfade(targetState = true, animationSpec = tween((180 / settings.animations.animationSpeed).toInt().coerceAtLeast(1)), label = "startup") { content() }
     } else LoadingScreen(settings, status, progress)
 }
 
 @Composable
 private fun LoadingScreen(settings: LauncherSettings, status: String, progress: Float) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = if (settings.animations.profile == AnimationProfile.OFF) tween(0) else tween(220),
-        label = "startup-progress"
-    )
+    val animatedProgress by animateFloatAsState(progress, if (settings.animations.profile == AnimationProfile.OFF) tween(0) else tween(220), label = "startup-progress")
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text("Imux", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
@@ -108,25 +100,18 @@ private fun LoadingScreen(settings: LauncherSettings, status: String, progress: 
 @Composable
 private fun LauncherShell(versions: List<VersionInfo>?, settings: LauncherSettings, vm: LauncherSettingsViewModel) {
     val nav = rememberNavController()
-    val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
-    val wide = width >= 600
-    if (wide) {
-        Row(Modifier.fillMaxSize()) {
-            NavigationRail {
-                Spacer(Modifier.height(12.dp))
-                NavigationRailItem(selected = false, onClick = { nav.navigate("home") }, icon = { Icon(Icons.Default.Gamepad, null) }, label = { Text("Game") })
-                NavigationRailItem(selected = false, onClick = { nav.navigate("settings") }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
-            }
-            NavHost(nav, "home", Modifier.weight(1f)) { routes(versions, settings, vm, nav) }
+    val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 600
+    if (wide) Row(Modifier.fillMaxSize()) {
+        NavigationRail {
+            Spacer(Modifier.height(12.dp))
+            NavigationRailItem(selected = false, onClick = { nav.navigate("home") }, icon = { Icon(Icons.Default.Gamepad, null) }, label = { Text("Game") })
+            NavigationRailItem(selected = false, onClick = { nav.navigate("settings") }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
         }
-    } else {
-        NavHost(nav, "home", Modifier.fillMaxSize()) { routes(versions, settings, vm, nav) }
-    }
+        NavHost(nav, "home", Modifier.weight(1f)) { routes(versions, settings, vm, nav) }
+    } else NavHost(nav, "home", Modifier.fillMaxSize()) { routes(versions, settings, vm, nav) }
 }
 
-private fun androidx.navigation.NavGraphBuilder.routes(
-    versions: List<VersionInfo>?, settings: LauncherSettings, vm: LauncherSettingsViewModel, nav: androidx.navigation.NavHostController
-) {
+private fun androidx.navigation.NavGraphBuilder.routes(versions: List<VersionInfo>?, settings: LauncherSettings, vm: LauncherSettingsViewModel, nav: androidx.navigation.NavHostController) {
     composable("home") { HomeScreen(versions, settings, nav) }
     composable("settings") { SettingsHubScreen(settings, vm, nav) { nav.navigate("controls") } }
     composable("controls") { FullscreenControlEditor(nav) }
@@ -162,11 +147,9 @@ private fun HomeScreen(versions: List<VersionInfo>?, settings: LauncherSettings,
                 Text("Game builds", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 if (versions == null) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                else LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(versions, key = { it.id }) { version ->
-                        ListItem(headlineContent = { Text(version.name) }, supportingContent = { Text(version.repository) }, leadingContent = { Icon(Icons.Default.Gamepad, null) }, modifier = Modifier.fillMaxWidth(), tonalElevation = if (version.id == selected?.id) 2.dp else 0.dp)
-                    }
-                }
+                else LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) { items(versions, key = { it.id }) { version ->
+                    ListItem(headlineContent = { Text(version.name) }, supportingContent = { Text(version.repository) }, leadingContent = { Icon(Icons.Default.Gamepad, null) }, modifier = Modifier.fillMaxWidth(), tonalElevation = if (version.id == selected?.id) 2.dp else 0.dp)
+                } }
             }
         }
     }
