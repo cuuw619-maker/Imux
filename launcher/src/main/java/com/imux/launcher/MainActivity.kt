@@ -7,7 +7,6 @@ import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -42,7 +41,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Gamepad
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -57,7 +55,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -79,13 +76,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -95,17 +90,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.imux.gamecore.VersionInfo
 import com.imux.gamecore.loadVersionCatalog
 import com.imux.launcher.performance.MemoryManager
-import com.imux.launcher.settings.AnimationSettings
 import com.imux.launcher.settings.CardAnimationStyle
 import com.imux.launcher.settings.ControlElement
-import com.imux.launcher.settings.ControlElementType
 import com.imux.launcher.settings.ControlLayout
 import com.imux.launcher.settings.LauncherOrientation
 import com.imux.launcher.settings.LauncherSettings
@@ -141,9 +133,7 @@ private fun ImuxApp(versions: List<VersionInfo>?, settingsViewModel: LauncherSet
         else -> androidx.compose.material3.lightColorScheme()
     }
     MaterialTheme(colorScheme = colors) {
-        StartupGate(settings) {
-            LauncherNavigation(versions, settings, settingsViewModel)
-        }
+        StartupGate(settings) { LauncherNavigation(versions, settings, settingsViewModel) }
     }
 }
 
@@ -196,7 +186,9 @@ private fun LoadingScreen(settings: LauncherSettings, status: String, progress: 
                 LoadingAnimationStyle.PULSING -> Box(Modifier.size(64.dp).background(primaryColor.copy(alpha = pulse), CircleShape))
                 LoadingAnimationStyle.DOTS -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { repeat(3) { Box(Modifier.size(10.dp).background(primaryColor.copy(alpha = if (it == (rotation / 120).toInt() % 3) 1f else .35f), CircleShape)) } }
                 LoadingAnimationStyle.WAVE, LoadingAnimationStyle.SHIMMER -> androidx.compose.material3.LinearProgressIndicator(progress = { (progress + (rotation / 360f) * .15f).coerceAtMost(1f) }, Modifier.fillMaxWidth(0.55f))
-                LoadingAnimationStyle.CIRCULAR -> Canvas(Modifier.size(58.dp).rotate(rotation)) { drawArc(primaryColor, -60f, 280f, false, Stroke(6.dp.toPx(), cap = StrokeCap.Round)) }
+                LoadingAnimationStyle.CIRCULAR -> Canvas(Modifier.size(58.dp).rotate(rotation)) {
+                    drawArc(primaryColor, -60f, 280f, false, style = Stroke(6.dp.toPx(), cap = StrokeCap.Round))
+                }
             }
             Spacer(Modifier.height(20.dp))
             Text(status, style = MaterialTheme.typography.titleMedium)
@@ -210,7 +202,6 @@ private fun LoadingScreen(settings: LauncherSettings, status: String, progress: 
 private fun LauncherNavigation(versions: List<VersionInfo>?, settings: LauncherSettings, vm: LauncherSettingsViewModel) {
     val navController = rememberNavController()
     val wide = LocalConfiguration.current.screenWidthDp >= 600
-    val start = "home"
     if (wide) {
         Row(Modifier.fillMaxSize()) {
             NavigationRail(Modifier.fillMaxHeight()) {
@@ -218,14 +209,14 @@ private fun LauncherNavigation(versions: List<VersionInfo>?, settings: LauncherS
                 NavigationRailItem(selected = false, onClick = { navController.navigate("home") }, icon = { Icon(Icons.Default.Gamepad, null) }, label = { Text("Game") })
                 NavigationRailItem(selected = false, onClick = { navController.navigate("settings") }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Settings") })
             }
-            NavHost(navController, startDestination = start, Modifier.weight(1f)) {
+            NavHost(navController, startDestination = "home", Modifier.weight(1f)) {
                 composable("home") { HomeScreen(versions, settings, navController) }
                 composable("settings") { SettingsScreen(settings, vm, navController) }
                 composable("controls") { ControlEditorScreen(settings, navController) }
             }
         }
     } else {
-        NavHost(navController, startDestination = start, Modifier.fillMaxSize()) {
+        NavHost(navController, startDestination = "home", Modifier.fillMaxSize()) {
             composable("home") { HomeScreen(versions, settings, navController) }
             composable("settings") { SettingsScreen(settings, vm, navController) }
             composable("controls") { ControlEditorScreen(settings, navController) }
@@ -233,6 +224,7 @@ private fun LauncherNavigation(versions: List<VersionInfo>?, settings: LauncherS
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreen(versions: List<VersionInfo>?, settings: LauncherSettings, navController: androidx.navigation.NavHostController) {
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -277,7 +269,7 @@ private fun HomeScreen(versions: List<VersionInfo>?, settings: LauncherSettings,
                     } else {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 12.dp)) {
                             items(versions, key = { it.id }) { version ->
-                                VersionCard(version, version.id == (selected?.id), settings, onClick = { selectedId = version.id })
+                                VersionCard(version, version.id == selected?.id, onClick = { selectedId = version.id })
                             }
                         }
                     }
@@ -288,12 +280,16 @@ private fun HomeScreen(versions: List<VersionInfo>?, settings: LauncherSettings,
 }
 
 @Composable
-private fun VersionCard(version: VersionInfo, selected: Boolean, settings: LauncherSettings, onClick: () -> Unit) {
+private fun VersionCard(version: VersionInfo, selected: Boolean, onClick: () -> Unit) {
     FilterChip(selected = selected, onClick = onClick, label = {
-        Column { Text(version.name, fontWeight = FontWeight.Medium); Text(if (version.isCurrent) "Текущая сборка" else "Архив", style = MaterialTheme.typography.labelSmall) }
+        Column {
+            Text(version.name, fontWeight = FontWeight.Medium)
+            Text(if (version.isCurrent) "Текущая сборка" else "Архив", style = MaterialTheme.typography.labelSmall)
+        }
     }, leadingIcon = if (selected) ({ Icon(Icons.Default.Check, null) }) else null, modifier = Modifier.fillMaxWidth())
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsScreen(settings: LauncherSettings, vm: LauncherSettingsViewModel, navController: androidx.navigation.NavHostController) {
     val scroll = rememberScrollState()
@@ -366,7 +362,11 @@ private fun SettingRow(label: String, control: @Composable () -> Unit) {
 
 @Composable
 private fun SliderSetting(label: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float = 1f, onChange: (Float) -> Unit) {
-    Column { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(label); Text(if (step < 1f) "%.1f".format(value) else value.toInt().toString()) }; Slider(value, onValueChange = onChange, valueRange = range, steps = ((range.endInclusive - range.start) / step).toInt().coerceAtLeast(0) - 1) }
+    val steps = (((range.endInclusive - range.start) / step).toInt() - 1).coerceAtLeast(0)
+    Column {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(label); Text(if (step < 1f) "%.1f".format(value) else value.toInt().toString()) }
+        Slider(value, onValueChange = onChange, valueRange = range, steps = steps)
+    }
 }
 
 @Composable
