@@ -44,7 +44,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.imux.gamecore.VersionInfo
-import com.imux.gamecore.VersionManager
+import com.imux.gamecore.loadVersionCatalog
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -105,28 +105,12 @@ private fun SplashScreen(onFinished: () -> Unit) {
     }
 }
 
-private suspend fun loadVersions(): List<VersionInfo> {
-    return try {
-        val latest = runCatching { VersionManager.fetchLatest() }.getOrNull()
-        val archives = VersionManager.fetchArchives()
-        buildList {
-            if (latest != null) add(latest)
-            addAll(archives)
-            if (isEmpty()) {
-                add(VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true))
-            }
-        }
-    } catch (_: Exception) {
-        listOf(VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true))
-    }
-}
-
 @Composable
 private fun MainScreen() {
     var versions by remember { mutableStateOf<List<VersionInfo>?>(null) }
 
     LaunchedEffect(Unit) {
-        versions = loadVersions()
+        versions = loadVersionCatalog()
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
