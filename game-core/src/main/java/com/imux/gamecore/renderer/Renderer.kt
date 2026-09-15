@@ -22,8 +22,13 @@ enum class GraphicsBackendType { AUTO, OPENGL_ES, VULKAN }
 
 data class RenderContext(
     val lowPowerTarget: Boolean = true,
+    val thermalAware: Boolean = true,
+    val targetFrameRate: Int = 60,
     val maxTextureSize: Int = 2048,
-    val maxDrawCalls: Int = 500
+    val maxTextureMemoryMb: Int = 384,
+    val maxDrawCalls: Int = 500,
+    val shaderComplexityLevel: Int = 0,
+    val resolutionScale: Float = 0.85f
 )
 
 interface ShaderManager
