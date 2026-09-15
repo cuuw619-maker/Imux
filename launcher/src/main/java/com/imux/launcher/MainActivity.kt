@@ -64,8 +64,7 @@ private fun ImuxApp() {
 private fun SplashScreen(onFinished: () -> Unit) {
     val transition = rememberInfiniteTransition(label = "splash")
     val rotation by transition.animateFloat(
-        0f,
-        360f,
+        0f, 360f,
         infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Restart),
         label = "rotation"
     )
@@ -109,14 +108,15 @@ private fun SplashScreen(onFinished: () -> Unit) {
 private suspend fun loadVersions(): List<VersionInfo> {
     val manager = VersionManager()
     return try {
-        runCatching {
-            val latest = manager.fetchLatest()
-            listOf(latest) + manager.fetchArchives()
-        }.getOrDefault(
-            listOf(
-                VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true)
-            )
-        )
+        val latest = runCatching { manager.fetchLatest() }.getOrNull()
+        val archives = manager.fetchArchives()
+        buildList {
+            if (latest != null) add(latest)
+            addAll(archives)
+            if (isEmpty()) {
+                add(VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true))
+            }
+        }
     } finally {
         manager.close()
     }
@@ -124,33 +124,34 @@ private suspend fun loadVersions(): List<VersionInfo> {
 
 @Composable
 private fun MainScreen() {
-    var versions by remember {
-        mutableStateOf(
-            listOf(
-                VersionInfo("main", "Imux • main", "main", "cuuw619-maker/Imux", true)
-            )
-        )
-    }
+    var versions by remember { mutableStateOf<List<VersionInfo>?>(null) }
 
     LaunchedEffect(Unit) {
         versions = loadVersions()
     }
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Text(
-                    "Выберите версию",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
-                )
+        val loadedVersions = versions
+        if (loadedVersions == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-            items(versions, key = { it.id }) { VersionCard(it) }
+        } else {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Text(
+                        "Выберите версию",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                    )
+                }
+                items(loadedVersions, key = { it.id }) { VersionCard(it) }
+            }
         }
     }
 }
@@ -174,13 +175,8 @@ private fun VersionCard(version: VersionInfo) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    version.repository,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(version.repository, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (version.isCurrent) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
         }
     }
 }
