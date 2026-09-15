@@ -83,6 +83,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
         infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Restart),
         label = "rotation"
     )
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         delay(1800)
@@ -100,7 +101,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
             Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.size(56.dp).rotate(rotation)) {
                     drawArc(
-                        color = MaterialTheme.colorScheme.primary,
+                        color = primaryColor,
                         startAngle = -55f,
                         sweepAngle = 275f,
                         useCenter = false,
