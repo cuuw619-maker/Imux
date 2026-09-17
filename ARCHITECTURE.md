@@ -4,9 +4,7 @@
 
 Imux is an independent Minecraft-inspired voxel sandbox game. It uses familiar voxel-sandbox concepts without using Minecraft source code or proprietary assets. The engine, runtime, data formats, renderer, UI, gameplay systems and assets are developed independently.
 
-## Phase 1 foundation
-
-The first phase establishes a small, buildable Android/native runtime rather than implementing gameplay prematurely.
+## Current foundation
 
 ```text
 Jetpack Compose
@@ -24,12 +22,12 @@ Android-specific APIs stay in the platform layer. The C++ engine exposes a narro
 
 ## Engine ownership
 
-- Core: time, logging, lifecycle state and small shared types.
+- Core: timing, diagnostics, logging, lifecycle state and small shared types.
 - Platform: Android surface/lifecycle integration and native library loading.
 - Renderer: backend-neutral renderer contract. Backend implementations are isolated from game/world code.
 - Game: future gameplay entry point; it currently remains intentionally minimal.
 
-The first renderer milestone is an abstraction and lifecycle-safe backend boundary. Vulkan is the intended primary backend and OpenGL ES is the compatibility backend; neither is forced into the game layer. A backend can be implemented incrementally behind the same interface.
+The renderer currently has a real lifecycle-safe headless backend. Vulkan is the intended primary GPU backend and OpenGL ES is the compatibility backend; neither is represented as implemented until it has real device/surface/presentation code.
 
 ## Lifecycle
 
@@ -37,15 +35,27 @@ The native runtime follows:
 
 `create -> resize -> update/render -> pause/resume -> destroy`
 
-Surface changes are treated independently from engine lifetime. Repeated create/destroy and resize operations must be safe. Delta time is clamped after long background intervals so returning from the background cannot produce an invalid simulation step.
+Surface changes are treated independently from engine lifetime. Repeated create/destroy and resize operations are guarded at the ABI boundary. Delta time is clamped after long background intervals so returning from the background cannot produce an invalid simulation step.
 
 ## C ABI
 
-The ABI is intentionally small. Kotlin/Java code should call the platform bridge rather than know C++ classes. The C++ implementation owns engine objects and translates primitive values at the boundary.
+The ABI is intentionally small and uses opaque 64-bit engine handles plus primitive lifecycle parameters. Invalid or null handles are ignored. Kotlin owns the handle value and clears it after destruction; C++ owns the Engine object.
+
+The lifecycle ABI remains the primary integration contract. Diagnostics are currently consumed internally by the native runtime and can be exposed to a future debug overlay without moving gameplay into Kotlin.
+
+## Renderer foundation
+
+The renderer owns a backend through `std::unique_ptr`. The backend contract includes initialization, resize, frame begin/end, shutdown, backend identification and renderer statistics. The current headless backend reports zero GPU resources/draw calls rather than fabricating GPU activity.
+
+The next graphics milestone can add a real Vulkan backend behind this boundary. Android `Surface`/`ANativeWindow` ownership should be introduced at the platform/renderer boundary only when the first GPU backend is implemented.
+
+## Diagnostics
+
+Core diagnostics track frame count, frame time, approximate FPS, elapsed runtime, engine state, resolution and renderer counters. The native runtime periodically emits a compact diagnostic line during development. No gameplay state is stored in the diagnostics layer.
 
 ## Future voxel architecture
 
-Later phases will add independent systems for block registration, chunk storage, streaming, meshing, lighting, procedural generation and world persistence. They are deliberately not part of the foundation commit.
+Later phases will add independent systems for block registration, chunk storage, streaming, meshing, lighting, procedural generation and world persistence. They are deliberately not part of the current foundation.
 
 ## Future Rust boundary
 
@@ -58,13 +68,14 @@ Dependencies are introduced only when a current milestone requires them. The fou
 ## Development sequence
 
 1. Foundation and Android/native lifecycle.
-2. Renderer backend implementation and GPU resource ownership.
-3. Input and timing infrastructure.
-4. Voxel data model and chunk storage.
-5. Meshing, streaming and procedural world generation.
-6. Lighting, player and gameplay systems.
-7. Persistence, entities and audio.
-8. Networking and multiplayer.
-9. Scripting/modding and tooling.
+2. CI/toolchain stability and renderer diagnostics.
+3. Real graphics backend and GPU resource ownership.
+4. Input and timing infrastructure.
+5. Voxel data model and chunk storage.
+6. Meshing, streaming and procedural world generation.
+7. Lighting, player and gameplay systems.
+8. Persistence, entities and audio.
+9. Networking and multiplayer.
+10. Scripting/modding and tooling.
 
 Each phase must preserve the buildable state and validate its own integration before the next phase expands the runtime.

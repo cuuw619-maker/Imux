@@ -13,9 +13,20 @@ public:
     void beginFrame() override {}
     void endFrame() override {}
     void shutdown() override {}
+    BackendKind kind() const noexcept override { return BackendKind::Headless; }
+    Statistics statistics() const noexcept override { return {}; }
 };
 
 } // namespace
+
+const char* backendName(BackendKind kind) noexcept {
+    switch (kind) {
+        case BackendKind::Headless: return "Headless";
+        case BackendKind::Vulkan: return "Vulkan";
+        case BackendKind::OpenGLES: return "OpenGLES";
+    }
+    return "Unknown";
+}
 
 Renderer::~Renderer() {
     shutdown();
@@ -24,8 +35,8 @@ Renderer::~Renderer() {
 bool Renderer::initialize() {
     if (backend_) return true;
 
-    // Phase 1 intentionally uses a headless backend. GPU backends are added
-    // behind this interface in the renderer implementation phases.
+    // This stage keeps the real lifecycle-safe headless backend. GPU backends
+    // are introduced only when their device/surface/presentation path exists.
     backend_ = std::make_unique<HeadlessBackend>();
     if (!backend_->initialize()) {
         backend_.reset();
@@ -33,7 +44,7 @@ bool Renderer::initialize() {
         return false;
     }
 
-    core::log(core::LogLevel::Info, "Renderer foundation initialized (headless backend)");
+    core::log(core::LogLevel::Info, "Renderer initialized: Headless");
     return true;
 }
 
@@ -52,6 +63,14 @@ void Renderer::shutdown() {
     if (!backend_) return;
     backend_->shutdown();
     backend_.reset();
+}
+
+BackendKind Renderer::backendKind() const noexcept {
+    return backend_ ? backend_->kind() : BackendKind::Headless;
+}
+
+Statistics Renderer::statistics() const noexcept {
+    return backend_ ? backend_->statistics() : Statistics{};
 }
 
 } // namespace imux::renderer
