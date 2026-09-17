@@ -11,11 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -34,12 +33,12 @@ fun SecondaryScreen(
     onBack: () -> Unit
 ) {
     val data = when (destination) {
-        LauncherDestination.SETTINGS -> ScreenData("Settings", Icons.Default.Tune, "Launcher settings are prepared here. Theme and launch options will be added when their underlying services exist.")
-        LauncherDestination.ABOUT -> ScreenData("About Imux", Icons.Default.Info, "Imux is an independent voxel sandbox project. Launcher version: 0.0.2.")
-        LauncherDestination.CONTROL_LAYOUTS -> ScreenData("Control Layouts", Icons.Default.Gamepad, "The control-layout entry point exists, but no virtual control editor is implemented yet.")
-        LauncherDestination.IMUX_DIRECTORY -> ScreenData("Imux Directory", Icons.Default.Folder, "The directory service is not implemented yet. No external game directory is used.")
+        LauncherDestination.SETTINGS -> ScreenData("Settings", Icons.Default.Settings, "Launcher settings are prepared here. Theme and launch options will be added when their underlying services exist.")
+        LauncherDestination.ABOUT -> ScreenData("About Imux", Icons.Default.Info, "Imux is an independent voxel sandbox project. Launcher version: 0.0.3.")
+        LauncherDestination.CONTROL_LAYOUTS -> ScreenData("Control Layouts", Icons.Default.Person, "The control-layout entry point exists, but no virtual control editor is implemented yet.")
+        LauncherDestination.IMUX_DIRECTORY -> ScreenData("Imux Directory", Icons.Default.Info, "The directory service is not implemented yet. No external game directory is used.")
         LauncherDestination.SHARE_LOGS -> ScreenData("Share Logs", Icons.Default.Share, "Log export is not wired yet. The native engine already maintains development diagnostics internally.")
-        LauncherDestination.DIAGNOSTICS -> ScreenData("Diagnostics", Icons.Default.Tune, "Diagnostics are currently available in the native development logger, not as a launcher overlay.")
+        LauncherDestination.DIAGNOSTICS -> ScreenData("Diagnostics", Icons.Default.Settings, "Diagnostics are currently available in the native development logger, not as a launcher overlay.")
         LauncherDestination.HOME -> ScreenData("Imux", Icons.Default.Info, "")
     }
 
