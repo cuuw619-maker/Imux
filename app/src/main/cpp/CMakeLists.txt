@@ -10,6 +10,10 @@ add_library(imux SHARED
     renderer/renderer.cpp
 )
 
+target_include_directories(imux PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 target_compile_features(imux PRIVATE cxx_std_20)
 target_compile_options(imux PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 
