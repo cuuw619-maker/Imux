@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,14 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -79,10 +75,7 @@ fun HomeScreen(
                     modifier = Modifier.weight(0.68f).fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        "Imux",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    Text("Imux", style = MaterialTheme.typography.headlineSmall)
                     Text(
                         "Launcher tools",
                         style = MaterialTheme.typography.bodyMedium,
@@ -96,14 +89,14 @@ fun HomeScreen(
                         Modifier.weight(1f)
                     )
                     LauncherActionCard(
-                        Icons.Default.Gamepad,
+                        Icons.Default.Info,
                         "Control Layouts",
                         "Virtual controls configuration entry point",
                         { onNavigate(LauncherDestination.CONTROL_LAYOUTS) },
                         Modifier.weight(1f)
                     )
                     LauncherActionCard(
-                        Icons.Default.Folder,
+                        Icons.Default.Info,
                         "Imux Directory",
                         "Access the future Imux data directory",
                         { onNavigate(LauncherDestination.IMUX_DIRECTORY) },
@@ -125,9 +118,7 @@ fun HomeScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.extraLarge,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(Modifier.padding(18.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -148,9 +139,7 @@ fun HomeScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth().weight(1f),
                         shape = MaterialTheme.shapes.extraLarge,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(
                             modifier = Modifier.fillMaxSize().padding(18.dp),
@@ -197,7 +186,7 @@ fun HomeScreen(
                                     onClick = { onNavigate(LauncherDestination.SETTINGS) },
                                     modifier = Modifier.fillMaxWidth().height(48.dp)
                                 ) {
-                                    Icon(Icons.Default.Tune, contentDescription = null)
+                                    Icon(Icons.Default.Settings, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
                                     Text("Launch Settings")
                                 }
