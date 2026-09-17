@@ -27,9 +27,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = System.getenv("IMUX_KEYSTORE_FILE")
+            if (!keystoreFile.isNullOrBlank()) {
+                storeFile = file(keystoreFile)
+            }
+            storePassword = System.getenv("IMUX_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("IMUX_KEY_ALIAS")
+            keyPassword = System.getenv("IMUX_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
