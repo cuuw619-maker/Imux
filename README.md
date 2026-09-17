@@ -22,4 +22,10 @@ Jetpack Compose / Android UI
 
 The first development phase establishes the Android/native boundary, engine lifecycle, renderer abstraction and documentation. Voxel gameplay systems will be introduced incrementally in later phases.
 
+## Build
+
+The repository is built in GitHub Actions with JDK 17, Gradle 8.11.1, Android SDK 35, NDK 27.0.12077973 and CMake 3.31.6. The workflow runs `gradle --no-daemon :app:assembleDebug`.
+
+A local Android SDK installation with the same toolchain can use the same Gradle command.
+
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the engineering plan.
