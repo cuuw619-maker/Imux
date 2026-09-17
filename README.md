@@ -40,9 +40,18 @@ The project-provided `icon.webp` is used as the Android launcher/Compose brandin
 
 ## Build
 
-GitHub Actions uses JDK 17, Gradle 8.11.1, Android SDK 35, NDK 27.0.12077973 and CMake 3.31.6. The workflow installs only the SDK components required by the current Gradle/CMake configuration and builds with `gradle --no-daemon :app:assembleDebug`.
+GitHub Actions uses JDK 17, Gradle 8.11.1, Android SDK 35, NDK 27.0.12077973 and CMake 3.31.6. The workflow builds both the Android application and a signed release APK. Release signing material is supplied only through GitHub Actions Secrets; no keystore is stored in the repository.
 
-A local Android SDK installation with the same toolchain can use the same Gradle command. The repository does not currently contain a Gradle wrapper, so CI pins the Gradle distribution through `gradle/actions/setup-gradle`.
+Required Actions Secrets for release signing:
+
+- `IMUX_KEYSTORE_BASE64` — base64-encoded contents of the stable release `.jks`/`.keystore` file.
+- `IMUX_KEYSTORE_PASSWORD` — keystore password.
+- `IMUX_KEY_ALIAS` — signing key alias.
+- `IMUX_KEY_PASSWORD` — signing key password.
+
+The release APK is uploaded as the `Imux-Launcher-release.apk` artifact and retained by GitHub Actions for 30 days. It is available from the Artifacts section of the corresponding workflow run.
+
+For local builds, use a local Android SDK with the same toolchain. The repository does not currently contain a Gradle wrapper, so CI pins the Gradle distribution through `gradle/actions/setup-gradle`.
 
 ## Architecture documentation
 
