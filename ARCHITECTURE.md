@@ -2,25 +2,38 @@
 
 ## Scope
 
-Imux is an independent Minecraft-inspired voxel sandbox game. It uses familiar voxel-sandbox concepts without using Minecraft source code or proprietary assets. The engine, runtime, data formats, renderer, UI, gameplay systems and assets are developed independently.
+Imux is an independent voxel sandbox game. Familiar voxel-sandbox concepts may be used, but the engine, runtime, data formats, renderer, launcher UI, gameplay systems and assets are developed independently.
 
-## Current foundation
+## Current application architecture
 
 ```text
-Jetpack Compose
-      |
-Android Platform Layer
-      |
-C ABI / JNI bridge
-      |
-C++ Imux Engine
-  |       |       |
- Core   Renderer  Game boundary
+Imux Launcher (Kotlin / Compose / Material 3)
+        |
+Launcher state + services
+        |
+Game Launch Boundary
+        |
+Imux Engine (C ABI / JNI)
+        |
+C++ Core / Renderer / Game
 ```
 
-Android-specific APIs stay in the platform layer. The C++ engine exposes a narrow C ABI so the Android implementation can evolve without spreading JNI or Android types through engine code.
+The Launcher is an Android presentation and orchestration layer. It does not contain gameplay code or direct renderer calls. The existing native engine surface loop remains available for the future Game Activity/runtime path.
 
-## Engine ownership
+## Launcher
+
+The Launcher is a dedicated Compose feature under `com.imux.game.launcher`. It currently provides:
+
+- adaptive landscape home layout with two primary columns;
+- centralized dark Material 3 theme;
+- guest profile model with no authentication dependency;
+- small state-based navigation between Home and secondary launcher screens;
+- explicit runtime availability state so Play cannot claim to launch a missing runtime;
+- branding through the repository-provided `icon.webp` resource.
+
+Launcher screens and services must remain independent from C++ gameplay and rendering. Future launch behavior should pass through a dedicated Game Launch Boundary rather than invoking native engine APIs from composables.
+
+## Native engine ownership
 
 - Core: timing, diagnostics, logging, lifecycle state and small shared types.
 - Platform: Android surface/lifecycle integration and native library loading.
@@ -69,13 +82,14 @@ Dependencies are introduced only when a current milestone requires them. The fou
 
 1. Foundation and Android/native lifecycle.
 2. CI/toolchain stability and renderer diagnostics.
-3. Real graphics backend and GPU resource ownership.
-4. Input and timing infrastructure.
-5. Voxel data model and chunk storage.
-6. Meshing, streaming and procedural world generation.
-7. Lighting, player and gameplay systems.
-8. Persistence, entities and audio.
-9. Networking and multiplayer.
-10. Scripting/modding and tooling.
+3. Launcher foundation and navigation.
+4. Real graphics backend and GPU resource ownership.
+5. Input and timing infrastructure.
+6. Voxel data model and chunk storage.
+7. Meshing, streaming and procedural world generation.
+8. Lighting, player and gameplay systems.
+9. Persistence, entities and audio.
+10. Networking and multiplayer.
+11. Scripting/modding and tooling.
 
 Each phase must preserve the buildable state and validate its own integration before the next phase expands the runtime.
