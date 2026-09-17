@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMUX_KEYSTORE_FILE: ${{ github.workspace }}/.signing/imux-release.jks
-      IMUX_KEYSTORE_PASSWORD: ${{ secrets.IMUX_KEYSTORE_PASSWORD }}
-      IMUX_KEY_ALIAS: ${{ secrets.IMUX_KEY_ALIAS }}
-      IMUX_KEY_PASSWORD: ${{ secrets.IMUX_KEY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -49,10 +46,20 @@ jobs:
           test -n "$IMUX_KEYSTORE_BASE64"
           mkdir -p "$(dirname "$IMUX_KEYSTORE_FILE")"
           printf '%s' "$IMUX_KEYSTORE_BASE64" | base64 --decode > "$IMUX_KEYSTORE_FILE"
+          test -s "$IMUX_KEYSTORE_FILE"
           chmod 600 "$IMUX_KEYSTORE_FILE"
 
       - name: Assemble signed release APK
-        run: gradle --no-daemon :app:assembleRelease
+        env:
+          IMUX_KEYSTORE_PASSWORD: ${{ secrets.IMUX_KEYSTORE_PASSWORD }}
+          IMUX_KEY_ALIAS: ${{ secrets.IMUX_KEY_ALIAS }}
+          IMUX_KEY_PASSWORD: ${{ secrets.IMUX_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$IMUX_KEYSTORE_PASSWORD"
+          test -n "$IMUX_KEY_ALIAS"
+          test -n "$IMUX_KEY_PASSWORD"
+          gradle --no-daemon :app:assembleRelease
 
       - name: Verify signed release APK
         run: |
