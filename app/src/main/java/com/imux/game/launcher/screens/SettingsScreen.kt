@@ -13,18 +13,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.imux.game.launcher.localization.LocaleRegistry
 import com.imux.game.launcher.model.LauncherSettings
 import com.imux.game.launcher.model.UiScale
 
@@ -40,9 +47,7 @@ fun SettingsScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
@@ -65,19 +70,15 @@ fun SettingsScreen(
                 SettingsSection("Launcher") {
                     SettingSwitch(
                         title = "Fullscreen",
-                        description = "Использовать immersive fullscreen без системных панелей.",
+                        description = "Immersive fullscreen без системных панелей.",
                         checked = settings.fullscreen,
-                        onCheckedChange = {
-                            onSettingsChanged(settings.copy(fullscreen = it))
-                        }
+                        onCheckedChange = { onSettingsChanged(settings.copy(fullscreen = it)) }
                     )
                     SettingSwitch(
                         title = "Animations",
                         description = "Плавные переходы launcher UI.",
                         checked = settings.animations,
-                        onCheckedChange = {
-                            onSettingsChanged(settings.copy(animations = it))
-                        }
+                        onCheckedChange = { onSettingsChanged(settings.copy(animations = it)) }
                     )
                     SettingSwitch(
                         title = "Notifications",
@@ -86,6 +87,27 @@ fun SettingsScreen(
                         enabled = false,
                         onCheckedChange = {}
                     )
+                    PlaceholderSetting(
+                        "Performance",
+                        "Профили энергопотребления и фоновых задач будут подключены к Launcher Services."
+                    )
+                    PlaceholderSetting(
+                        "Storage",
+                        "Storage service будет управлять cache, resources и runtime."
+                    )
+                    PlaceholderSetting(
+                        "Diagnostics",
+                        "Техническая информация будет доступна через Diagnostics service."
+                    )
+                }
+
+                SettingsSection("Appearance") {
+                    PlaceholderSetting("Theme", "Активна собственная Imux dark theme.")
+                    PlaceholderSetting("Navigation style", "Текущий режим: adaptive vertical sidebar.")
+                    PlaceholderSetting("UI effects", "Blur и тяжёлые эффекты намеренно не используются.")
+                    LanguageSelector(settings.languageTag) { tag ->
+                        onSettingsChanged(settings.copy(languageTag = tag))
+                    }
                 }
 
                 SettingsSection("Interface") {
@@ -93,17 +115,13 @@ fun SettingsScreen(
                         title = "Reduce motion",
                         description = "Минимизировать необязательные переходы.",
                         checked = settings.reduceMotion,
-                        onCheckedChange = {
-                            onSettingsChanged(settings.copy(reduceMotion = it))
-                        }
+                        onCheckedChange = { onSettingsChanged(settings.copy(reduceMotion = it)) }
                     )
                     SettingSwitch(
                         title = "Touch feedback",
-                        description = "Системная визуальная обратная связь элементов.",
+                        description = "Визуальная обратная связь элементов.",
                         checked = settings.touchFeedback,
-                        onCheckedChange = {
-                            onSettingsChanged(settings.copy(touchFeedback = it))
-                        }
+                        onCheckedChange = { onSettingsChanged(settings.copy(touchFeedback = it)) }
                     )
                     Text(
                         "UI scale",
@@ -118,9 +136,7 @@ fun SettingsScreen(
                             ) {
                                 RadioButton(
                                     selected = settings.uiScale == scale,
-                                    onClick = {
-                                        onSettingsChanged(settings.copy(uiScale = scale))
-                                    }
+                                    onClick = { onSettingsChanged(settings.copy(uiScale = scale)) }
                                 )
                                 Text(scale.name.lowercase().replaceFirstChar { it.uppercase() })
                             }
@@ -148,6 +164,38 @@ fun SettingsScreen(
 }
 
 @Composable
+private fun LanguageSelector(
+    selectedTag: String,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = LocaleRegistry.resolve(selectedTag)
+
+    Column(modifier = Modifier.padding(vertical = 7.dp)) {
+        Text("Language", style = MaterialTheme.typography.bodyLarge)
+        Text(
+            "Fallback: selected language → English → safe fallback",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        TextButton(onClick = { expanded = true }) {
+            Text(selected.displayName)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            LocaleRegistry.supported.forEach { locale ->
+                DropdownMenuItem(
+                    text = { Text(locale.displayName) },
+                    onClick = {
+                        onSelected(locale.tag)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun SettingsSection(
     title: String,
     content: @Composable () -> Unit
@@ -157,9 +205,7 @@ private fun SettingsSection(
         shape = MaterialTheme.shapes.extraLarge
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
+            modifier = Modifier.fillMaxWidth().padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge)
@@ -177,9 +223,7 @@ private fun SettingSwitch(
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 7.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -190,11 +234,7 @@ private fun SettingSwitch(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Switch(
-            checked = checked,
-            enabled = enabled,
-            onCheckedChange = onCheckedChange
-        )
+        Switch(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -206,7 +246,7 @@ private fun PlaceholderSetting(
     Column(modifier = Modifier.padding(vertical = 7.dp)) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         Text(
-            "Not implemented · $description",
+            "Not implemented · " + description,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
