@@ -10,7 +10,8 @@ enum class LauncherDestination {
     ABOUT,
     ACCOUNTS,
     IMUX_DIRECTORY,
-    RESOURCES
+    RESOURCES,
+    DIAGNOSTICS
 }
 
 enum class LauncherRoute {
