@@ -73,6 +73,7 @@ fun HomeScreen(
                 onDirectory = { onNavigate(LauncherDestination.IMUX_DIRECTORY) },
                 onAccounts = { onNavigate(LauncherDestination.ACCOUNTS) },
                 onResources = { onNavigate(LauncherDestination.RESOURCES) },
+                onDiagnostics = { onNavigate(LauncherDestination.DIAGNOSTICS) },
                 onSettings = onOpenSettings
             )
 
@@ -135,6 +136,7 @@ private fun LauncherContent(destination: LauncherDestination) {
         LauncherDestination.ACCOUNTS -> "Аккаунты"
         LauncherDestination.IMUX_DIRECTORY -> "Imux Directory"
         LauncherDestination.RESOURCES -> "Resources"
+        LauncherDestination.DIAGNOSTICS -> "Diagnostics"
     }
 
     val description = when (destination) {
@@ -148,6 +150,7 @@ private fun LauncherContent(destination: LauncherDestination) {
         LauncherDestination.ACCOUNTS -> "Сейчас доступно локальное состояние Гость. Authentication provider будет отдельным Imux service."
         LauncherDestination.IMUX_DIRECTORY -> "Каталог Imux: Runtime, Resources, Logs, Cache, Profiles, Controls и будущие данные."
         LauncherDestination.RESOURCES -> "Resource Manager будет управлять собственными ResourcePackage и ресурсами Imux."
+        LauncherDestination.DIAGNOSTICS -> "Состояние launcher, runtime, native engine и Android platform без вывода необработанных stacktrace."
     }
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
