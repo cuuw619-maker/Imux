@@ -6,7 +6,7 @@ The engine, runtime architecture, data formats, renderer, gameplay code, launche
 
 ## Current development version
 
-**0.0.4** — Imux Launcher shell redesign with a compact landscape launcher layout.
+**0.0.5** — Imux Launcher shell redesign with a compact landscape launcher layout.
 
 See [CHANGELOG.md](CHANGELOG.md) and [docs/development/IMUX_VERSION_0_0_4.md](docs/development/IMUX_VERSION_0_0_4.md) for the factual changes in this stage.
 
