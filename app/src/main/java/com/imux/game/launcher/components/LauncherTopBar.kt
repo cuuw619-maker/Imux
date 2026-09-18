@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -28,6 +29,7 @@ fun LauncherTopBar(
     onDirectory: () -> Unit,
     onAccounts: () -> Unit,
     onResources: () -> Unit,
+    onDiagnostics: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -58,6 +60,9 @@ fun LauncherTopBar(
             }
             IconButton(onClick = onResources, modifier = Modifier.size(46.dp)) {
                 Icon(Icons.Default.Download, contentDescription = "Resources")
+            }
+            IconButton(onClick = onDiagnostics, modifier = Modifier.size(46.dp)) {
+                Icon(Icons.Default.Info, contentDescription = "Status and Diagnostics")
             }
             IconButton(onClick = onSettings, modifier = Modifier.size(46.dp)) {
                 Icon(Icons.Default.Settings, contentDescription = "Launcher Settings")
