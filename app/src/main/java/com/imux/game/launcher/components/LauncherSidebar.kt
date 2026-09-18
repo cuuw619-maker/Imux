@@ -4,8 +4,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,18 +45,8 @@ private val navigationEntries = listOf(
     NavigationEntry(LauncherDestination.CONTROL, "Управление", Icons.Default.Tune),
     NavigationEntry(LauncherDestination.GAMEPAD, "Геймпад", Icons.Default.Gamepad),
     NavigationEntry(LauncherDestination.LAUNCHER, "Лаунчер", Icons.Default.Settings),
-    NavigationEntry(
-        LauncherDestination.LAYOUTS,
-        "Раскладки",
-        Icons.Default.SportsEsports,
-        dividerBefore = true
-    ),
-    NavigationEntry(
-        LauncherDestination.ABOUT,
-        "О проекте",
-        Icons.Default.Info,
-        dividerBefore = true
-    )
+    NavigationEntry(LauncherDestination.LAYOUTS, "Раскладки", Icons.Default.SportsEsports, dividerBefore = true),
+    NavigationEntry(LauncherDestination.ABOUT, "О проекте", Icons.Default.Info, dividerBefore = true)
 )
 
 @Composable
@@ -65,21 +55,15 @@ fun LauncherSidebar(
     onNavigate: (LauncherDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Spacer(Modifier.height(4.dp))
-
         navigationEntries.forEach { entry ->
             if (entry.dividerBefore) {
                 HorizontalDivider(
-                    modifier = Modifier
-                        .padding(horizontal = 38.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 38.dp, vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
                 )
             }
-
             NavigationItem(
                 entry = entry,
                 selected = entry.destination == selected,
@@ -96,11 +80,7 @@ private fun NavigationItem(
     onClick: () -> Unit
 ) {
     val containerColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            Color.Transparent
-        },
+        targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
         label = "navigation-selection"
     )
     val contentColor = if (selected) {
@@ -110,23 +90,18 @@ private fun NavigationItem(
     }
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(54.dp)
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().height(54.dp).clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
         color = containerColor,
         contentColor = contentColor
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = entry.icon,
-                contentDescription = null,
+                contentDescription = entry.label,
                 modifier = Modifier.size(24.dp)
             )
             Text(

@@ -9,5 +9,17 @@ enum class LauncherDestination {
     LAYOUTS,
     ABOUT,
     ACCOUNTS,
-    IMUX_DIRECTORY
+    IMUX_DIRECTORY,
+    RESOURCES
+}
+
+enum class LauncherRoute {
+    HOME,
+    SETTINGS
+}
+
+enum class UiScale {
+    COMPACT,
+    NORMAL,
+    LARGE
 }

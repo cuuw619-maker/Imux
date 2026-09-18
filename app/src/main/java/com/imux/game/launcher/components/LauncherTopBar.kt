@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -26,14 +27,12 @@ import com.imux.game.R
 fun LauncherTopBar(
     onDirectory: () -> Unit,
     onAccounts: () -> Unit,
+    onResources: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(58.dp)
-            .padding(horizontal = 4.dp),
+        modifier = modifier.fillMaxWidth().height(58.dp).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -56,6 +55,9 @@ fun LauncherTopBar(
             }
             IconButton(onClick = onAccounts, modifier = Modifier.size(46.dp)) {
                 Icon(Icons.Default.AccountCircle, contentDescription = "Accounts")
+            }
+            IconButton(onClick = onResources, modifier = Modifier.size(46.dp)) {
+                Icon(Icons.Default.Download, contentDescription = "Resources")
             }
             IconButton(onClick = onSettings, modifier = Modifier.size(46.dp)) {
                 Icon(Icons.Default.Settings, contentDescription = "Launcher Settings")

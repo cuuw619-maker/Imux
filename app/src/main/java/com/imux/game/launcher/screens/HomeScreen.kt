@@ -48,39 +48,36 @@ import com.imux.game.launcher.components.LauncherSidebar
 import com.imux.game.launcher.components.LauncherTopBar
 import com.imux.game.launcher.model.GuestProfile
 import com.imux.game.launcher.model.LauncherDestination
+import com.imux.game.launcher.services.LaunchState
 
 @Composable
 fun HomeScreen(
     profile: GuestProfile,
     destination: LauncherDestination,
+    launchState: LaunchState,
     onNavigate: (LauncherDestination) -> Unit,
+    onOpenSettings: () -> Unit,
+    onPlay: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val safePadding = androidx.compose.foundation.layout.WindowInsets.safeDrawing
-        .asPaddingValues()
+    val safePadding = androidx.compose.foundation.layout.WindowInsets.safeDrawing.asPaddingValues()
 
     Surface(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(safePadding),
+        modifier = modifier.fillMaxSize().padding(safePadding),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             LauncherTopBar(
                 onDirectory = { onNavigate(LauncherDestination.IMUX_DIRECTORY) },
                 onAccounts = { onNavigate(LauncherDestination.ACCOUNTS) },
-                onSettings = { onNavigate(LauncherDestination.LAUNCHER) }
+                onResources = { onNavigate(LauncherDestination.RESOURCES) },
+                onSettings = onOpenSettings
             )
 
             BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = 2.dp)
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 2.dp)
             ) {
                 val sidebarWidth = if (maxWidth < 700.dp) 168.dp else 184.dp
                 val launchCardWidth = when {
@@ -96,23 +93,15 @@ fun HomeScreen(
                     LauncherSidebar(
                         selected = destination,
                         onNavigate = onNavigate,
-                        modifier = Modifier
-                            .width(sidebarWidth)
-                            .fillMaxHeight()
-                            .padding(top = 2.dp, bottom = 4.dp)
+                        modifier = Modifier.width(sidebarWidth).fillMaxHeight().padding(top = 2.dp, bottom = 4.dp)
                     )
 
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                        modifier = Modifier.weight(1f).fillMaxHeight().padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
                         AnimatedContent(
                             targetState = destination,
-                            transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
-                            },
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
                             label = "launcher-content"
                         ) { target ->
                             LauncherContent(target)
@@ -121,11 +110,11 @@ fun HomeScreen(
 
                     LaunchProfileCard(
                         profile = profile,
+                        launchState = launchState,
                         onAccount = { onNavigate(LauncherDestination.ACCOUNTS) },
-                        onLaunchSettings = { onNavigate(LauncherDestination.LAUNCHER) },
-                        modifier = Modifier
-                            .width(launchCardWidth)
-                            .fillMaxHeight()
+                        onLaunchSettings = onOpenSettings,
+                        onPlay = onPlay,
+                        modifier = Modifier.width(launchCardWidth).fillMaxHeight()
                     )
                 }
             }
@@ -134,9 +123,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun LauncherContent(
-    destination: LauncherDestination
-) {
+private fun LauncherContent(destination: LauncherDestination) {
     val title = when (destination) {
         LauncherDestination.RENDER -> "Рендер"
         LauncherDestination.GAME -> "Игра"
@@ -147,33 +134,23 @@ private fun LauncherContent(
         LauncherDestination.ABOUT -> "О проекте"
         LauncherDestination.ACCOUNTS -> "Аккаунты"
         LauncherDestination.IMUX_DIRECTORY -> "Imux Directory"
+        LauncherDestination.RESOURCES -> "Resources"
     }
 
     val description = when (destination) {
-        LauncherDestination.RENDER ->
-            "Настройки графического renderer Imux подготовлены как отдельный launcher-раздел."
-        LauncherDestination.GAME ->
-            "Параметры будущего игрового runtime будут подключаться через Game Launch Boundary."
-        LauncherDestination.CONTROL ->
-            "Основные touch controls. Редактор виртуального управления будет подключён позже."
-        LauncherDestination.GAMEPAD ->
-            "Подключение и настройка физических контроллеров без привязки к стороннему runtime."
-        LauncherDestination.LAUNCHER ->
-            "Настройки самого Imux Launcher и будущего запуска игрового runtime."
-        LauncherDestination.LAYOUTS ->
-            "Сохранённые схемы управления появятся здесь после создания собственного редактора."
-        LauncherDestination.ABOUT ->
-            "Imux — независимый voxel sandbox проект с собственным runtime и native engine."
-        LauncherDestination.ACCOUNTS ->
-            "Сейчас доступны только локальные состояния профиля. Реальная аутентификация не подключена."
-        LauncherDestination.IMUX_DIRECTORY ->
-            "Сервис каталога Imux пока не подключён. Minecraft-совместимый каталог не используется."
+        LauncherDestination.RENDER -> "Настройки Imux Renderer API будут подключаться к native renderer через service boundary."
+        LauncherDestination.GAME -> "Параметры будущего игрового runtime подключаются через Game Launch Boundary."
+        LauncherDestination.CONTROL -> "Touch controls будут описываться собственными ControlLayout и ControlElement моделями."
+        LauncherDestination.GAMEPAD -> "Gamepad Manager будет работать с реальными Android input devices без фиктивного определения."
+        LauncherDestination.LAUNCHER -> "Раздел запуска Imux: runtime status, launch configuration и будущие параметры запуска."
+        LauncherDestination.LAYOUTS -> "Layout Manager будет хранить Default, Touch, Gamepad и Custom схемы независимо от UI."
+        LauncherDestination.ABOUT -> "Imux — независимый voxel sandbox проект с собственным runtime и native engine."
+        LauncherDestination.ACCOUNTS -> "Сейчас доступно локальное состояние Гость. Authentication provider будет отдельным Imux service."
+        LauncherDestination.IMUX_DIRECTORY -> "Каталог Imux: Runtime, Resources, Logs, Cache, Profiles, Controls и будущие данные."
+        LauncherDestination.RESOURCES -> "Resource Manager будет управлять собственными ResourcePackage и ресурсами Imux."
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Top
-    ) {
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
         Spacer(Modifier.height(10.dp))
         Text(text = title, style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(8.dp))
@@ -188,22 +165,27 @@ private fun LauncherContent(
 @Composable
 private fun LaunchProfileCard(
     profile: GuestProfile,
+    launchState: LaunchState,
     onAccount: () -> Unit,
     onLaunchSettings: () -> Unit,
+    onPlay: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val playEnabled = launchState is LaunchState.Ready
+    val buttonLabel = when (launchState) {
+        LaunchState.Launching -> "Запуск Imux..."
+        LaunchState.Running -> "Imux запущен"
+        else -> "Играть"
+    }
+
     Card(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -212,13 +194,10 @@ private fun LaunchProfileCard(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceVariant
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.Person,
-                        contentDescription = null,
+                        contentDescription = "Профиль",
                         modifier = Modifier.size(42.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -237,9 +216,7 @@ private fun LaunchProfileCard(
 
             OutlinedButton(
                 onClick = onAccount,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
+                modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
@@ -247,25 +224,20 @@ private fun LaunchProfileCard(
             }
 
             Spacer(Modifier.height(24.dp))
-            RuntimeBlock(onLaunchSettings = onLaunchSettings)
+            RuntimeBlock(launchState, onLaunchSettings)
             Spacer(Modifier.height(24.dp))
 
             Button(
-                onClick = {},
-                enabled = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                onClick = onPlay,
+                enabled = playEnabled,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
                 colors = ButtonDefaults.buttonColors(
                     disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Text(
-                    text = "Играть",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Text(buttonLabel, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
@@ -273,12 +245,26 @@ private fun LaunchProfileCard(
 
 @Composable
 private fun RuntimeBlock(
+    launchState: LaunchState,
     onLaunchSettings: () -> Unit
 ) {
     val warningTint by animateColorAsState(
-        targetValue = MaterialTheme.colorScheme.primary,
+        targetValue = when (launchState) {
+            is LaunchState.Ready -> MaterialTheme.colorScheme.primary
+            is LaunchState.Failed -> MaterialTheme.colorScheme.error
+            else -> MaterialTheme.colorScheme.primary
+        },
         label = "runtime-status-tint"
     )
+
+    val statusText = when (launchState) {
+        LaunchState.Idle, LaunchState.Checking -> "Проверка runtime..."
+        LaunchState.NotInstalled -> "Игровой runtime не установлен"
+        is LaunchState.Ready -> "Готов к запуску · " + launchState.runtime.version
+        LaunchState.Launching -> "Запуск Imux..."
+        LaunchState.Running -> "Imux запущен"
+        is LaunchState.Failed -> launchState.message
+    }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -286,9 +272,7 @@ private fun RuntimeBlock(
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
@@ -296,10 +280,7 @@ private fun RuntimeBlock(
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.background
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(R.drawable.icon),
                         contentDescription = "Imux",
@@ -309,11 +290,9 @@ private fun RuntimeBlock(
             }
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 10.dp)
+                modifier = Modifier.weight(1f).padding(horizontal = 10.dp)
             ) {
-                Text("Imux", style = MaterialTheme.typography.titleMedium)
+                Text("Imux Runtime", style = MaterialTheme.typography.titleMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.ErrorOutline,
@@ -323,17 +302,14 @@ private fun RuntimeBlock(
                     )
                     Spacer(Modifier.width(5.dp))
                     Text(
-                        text = "Игровой runtime не установлен",
+                        text = statusText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            IconButton(
-                onClick = onLaunchSettings,
-                modifier = Modifier.size(42.dp)
-            ) {
+            IconButton(onClick = onLaunchSettings, modifier = Modifier.size(42.dp)) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Настройки запуска"
