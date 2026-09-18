@@ -46,7 +46,7 @@ fun LauncherApp(
         var destination by remember { mutableStateOf(LauncherDestination.GAME) }
         var route by remember { mutableStateOf(LauncherRoute.HOME) }
         var settings by remember { mutableStateOf(LauncherSettings()) }
-        var launchState by remember<LaunchState> { mutableStateOf(LaunchState.Idle) }
+        var launchState by remember { mutableStateOf<LaunchState>(LaunchState.Idle) }
         var showLaunchError by remember { mutableStateOf(false) }
 
         LaunchedEffect(launchService) {
