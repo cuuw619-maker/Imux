@@ -22,6 +22,16 @@ The Launcher is an Android presentation and orchestration layer. It does not con
 
 ## Launcher
 
+The Launcher is a dedicated Compose feature under `com.imux.game.launcher`. Version 0.0.5 extends the shell with explicit runtime and launch boundaries, fullscreen window control, settings routing, localization registry, directory/resource models, input/layout models, real Android gamepad discovery, and diagnostics routing.
+
+The UI path remains:
+
+`Compose UI -> Launcher services -> Game Launch Boundary -> Imux Runtime -> C ABI -> Native Engine`
+
+Compose never invokes JNI/C++ directly. Runtime discovery is based on the private Imux application directory and a real `runtime.version` marker; no Minecraft version semantics are used.
+
+## Launcher
+
 The Launcher is a dedicated Compose feature under `com.imux.game.launcher`. It currently provides:
 
 - adaptive landscape home layout with two primary columns;
