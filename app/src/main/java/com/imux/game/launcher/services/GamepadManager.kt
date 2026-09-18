@@ -15,14 +15,15 @@ interface GamepadManager {
 
 class AndroidGamepadManager : GamepadManager {
     override fun connectedGamepads(): List<GamepadInfo> {
-        return InputDevice.getDeviceIds()
-            .mapNotNull { id -> InputDevice.getDevice(id) }
-            .filter { device ->
+        val ids: IntArray = InputDevice.getDeviceIds()
+        return ids.toList()
+            .mapNotNull { id: Int -> InputDevice.getDevice(id) }
+            .filter { device: InputDevice ->
                 val sources = device.sources
-                sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD ||
-                    sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
+                (sources and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+                    (sources and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
             }
-            .map { device ->
+            .map { device: InputDevice ->
                 GamepadInfo(
                     deviceId = device.id,
                     name = device.name,
