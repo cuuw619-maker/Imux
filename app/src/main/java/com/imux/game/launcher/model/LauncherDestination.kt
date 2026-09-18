@@ -1,11 +1,13 @@
 package com.imux.game.launcher.model
 
 enum class LauncherDestination {
-    HOME,
-    SETTINGS,
+    RENDER,
+    GAME,
+    CONTROL,
+    GAMEPAD,
+    LAUNCHER,
+    LAYOUTS,
     ABOUT,
-    CONTROL_LAYOUTS,
-    IMUX_DIRECTORY,
-    SHARE_LOGS,
-    DIAGNOSTICS
+    ACCOUNTS,
+    IMUX_DIRECTORY
 }
