@@ -1,9 +1,13 @@
 package com.imux.game.launcher.screens
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +52,7 @@ import com.imux.game.launcher.components.LauncherSidebar
 import com.imux.game.launcher.components.LauncherTopBar
 import com.imux.game.launcher.model.GuestProfile
 import com.imux.game.launcher.model.LauncherDestination
+import com.imux.game.launcher.services.ImuxDirectories
 import com.imux.game.launcher.services.LaunchState
 
 @Composable
@@ -55,6 +60,10 @@ fun HomeScreen(
     profile: GuestProfile,
     destination: LauncherDestination,
     launchState: LaunchState,
+    directories: ImuxDirectories,
+    selectedDirectoryUri: Uri?,
+    onPickDirectory: () -> Unit,
+    onClearDirectory: () -> Unit,
     onNavigate: (LauncherDestination) -> Unit,
     onOpenSettings: () -> Unit,
     onPlay: () -> Unit,
@@ -102,10 +111,24 @@ fun HomeScreen(
                     ) {
                         AnimatedContent(
                             targetState = destination,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            transitionSpec = {
+                                (slideInHorizontally { it / 4 } + fadeIn() + scaleIn(initialScale = 0.98f)) togetherWith
+                                    (slideOutHorizontally { -it / 5 } + fadeOut())
+                            },
                             label = "launcher-content"
                         ) { target ->
-                            LauncherContent(target)
+                            if (target == LauncherDestination.IMUX_DIRECTORY) {
+                                DirectoryScreen(
+                                    directories = directories,
+                                    selectedUri = selectedDirectoryUri,
+                                    onPickFolder = onPickDirectory,
+                                    onClearFolder = onClearDirectory,
+                                    onRefresh = onPickDirectory,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                LauncherContent(target)
+                            }
                         }
                     }
 
